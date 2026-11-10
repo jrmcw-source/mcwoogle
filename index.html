@@ -334,7 +334,7 @@
       }
       .r-foot button { background: none; border: none; color: var(--ink-soft); font-weight: 700; padding: 6px 4px; }
 
-      /* ---------- Jason Prize ---------- */
+      /* ---------- jAIou badge ---------- */
       .r-chrome { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
       .r-chrome .stats { margin-bottom: 16px; }
       .prize-link {
@@ -486,7 +486,7 @@
       <main class="r-body">
         <div class="r-chrome">
           <p class="stats" id="stats-line"></p>
-          <button class="prize-link" id="prize-link" type="button" hidden>Your Jason Prize</button>
+          <button class="prize-link" id="prize-link" type="button" hidden>Your jAIou badge</button>
         </div>
         <p class="dym" id="dym-line" hidden></p>
         <div class="r-grid" id="r-grid">
@@ -515,6 +515,11 @@
 
     <script>
       "use strict";
+
+      /* ---------------- real results source ---------------- */
+      /* Swap the provider by changing this one address; the mixing logic below never hard-codes it. */
+      var RELAY_URL = "https://mcwoogle-relay.jrmcw.workers.dev/";
+      var RELAY_TIMEOUT_MS = 6000;
 
       /* ---------------- helpers ---------------- */
       function $(id) { return document.getElementById(id); }
@@ -551,10 +556,10 @@
       var FAV_COLORS = ["#22603a", "#2456a6", "#b3372a", "#a86e00", "#1f3050", "#6d3b8a", "#8a5a1d", "#2e6b34"];
       /* ---------- session memory (in-memory only, this tab) ---------- */
       var session = { count: 0, queries: [] };
-      /* ---------- The Jason Prize (awarded on the 7th search of a session) ---------- */
+      /* ---------- The jAIou badge (awarded on the 4th search of a session) ---------- */
       var prize = { awarded: false, query: "", visible: false };
       function badgeSVGString() {
-        return '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 320 320" width="640" height="640" role="img" aria-label="The Jason Prize badge">' +
+        return '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 320 320" width="640" height="640" role="img" aria-label="The jAIou badge">' +
           '<defs>' +
           '<pattern id="jp-tartan" width="52" height="52" patternUnits="userSpaceOnUse">' +
           '<rect width="52" height="52" fill="#1e5631"/>' +
@@ -573,7 +578,7 @@
           '<circle cx="160" cy="160" r="128" fill="#fdfcf8" stroke="#e8c64b" stroke-width="3"/>' +
           '<circle cx="160" cy="160" r="121" fill="none" stroke="#c9c0a6" stroke-width="1"/>' +
           '<text font-family="Georgia, serif" font-size="25" font-weight="700" letter-spacing="4" fill="#1f3050">' +
-          '<textPath href="#jp-arc" xlink:href="#jp-arc" startOffset="50%" text-anchor="middle">THE JASON PRIZE</textPath></text>' +
+          '<textPath href="#jp-arc" xlink:href="#jp-arc" startOffset="50%" text-anchor="middle">THE jAIou BADGE</textPath></text>' +
           '<g stroke="#7a5200" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">' +
           '<polygon points="112,146 74,124 74,180 112,158" fill="#c99700"/>' +
           '<ellipse cx="74" cy="152" rx="7" ry="28" fill="#a86e00"/>' +
@@ -589,21 +594,22 @@
           '<circle cx="178.5" cy="124" r="6" fill="#e0aa12"/>' +
           '<circle cx="200.5" cy="124" r="6" fill="#e0aa12"/>' +
           '</g>' +
-          '<text x="160" y="220" text-anchor="middle" font-family="Georgia, serif" font-size="13.5" font-weight="700" letter-spacing="1.6" fill="#a03123">SEVEN SEARCHES DEEP</text>' +
-          '<text x="160" y="242" text-anchor="middle" font-family="Georgia, serif" font-size="9.5" letter-spacing="1.4" fill="#756d5c">McWOOGLE MILESTONE AWARD</text>' +
+          '<text x="160" y="208" text-anchor="middle" font-family="Georgia, serif" font-size="30" font-weight="700" letter-spacing="1" fill="#1f3050">jAIou</text>' +
+          '<text x="160" y="232" text-anchor="middle" font-family="Georgia, serif" font-size="13.5" font-weight="700" letter-spacing="1.6" fill="#a03123">FOUR SEARCHES DEEP</text>' +
+          '<text x="160" y="254" text-anchor="middle" font-family="Georgia, serif" font-size="9.5" letter-spacing="1.4" fill="#756d5c">McWOOGLE MILESTONE AWARD</text>' +
           '</svg>';
       }
       function prizeAnnouncement() {
-        return "I won The Jason Prize on McWoogle — seven searches deep. Awarded for: \u201C" + prize.query + ".\u201D Badge displayed here as proof.";
+        return "I won the jAIou badge on McWoogle — four searches deep. Awarded for: \u201C" + prize.query + ".\u201D Badge displayed here as proof.";
       }
       function prizePanelHTML() {
-        return '<section class="prize-panel" id="prize-panel" aria-label="The Jason Prize">' +
+        return '<section class="prize-panel" id="prize-panel" aria-label="The jAIou badge">' +
           '<div class="tartan-thin" aria-hidden="true"></div>' +
           '<div class="prize-inner">' +
           '<button class="prize-hide" id="prize-hide" type="button">Hide</button>' +
           '<p class="prize-kicker">McWoogle Milestone Award</p>' +
-          '<h2>The Jason Prize</h2>' +
-          '<p class="prize-congrats">Congratulations. Your seventh search has been entered in the record and selected as a winning entry.</p>' +
+          '<h2>The jAIou Badge</h2>' +
+          '<p class="prize-congrats">Congratulations. Your fourth search has been entered in the record and selected as a winning entry.</p>' +
           '<p class="prize-awarded">Awarded for: <strong>&lsquo;' + esc(prize.query) + '&rsquo;</strong></p>' +
           '<div class="prize-badge">' + badgeSVGString() + '</div>' +
           '<div class="prize-actions">' +
@@ -619,7 +625,7 @@
         var url = URL.createObjectURL(blob);
         var a = document.createElement("a");
         a.href = url;
-        a.download = "jason-prize-badge.svg";
+        a.download = "jaiou-badge.svg";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -642,14 +648,13 @@
           navigator.clipboard.writeText(prizeAnnouncement()).then(done, fallback);
         } else { fallback(); }
       }
-      function levelForCount(c) { if (c <= 1) return 1; if (c === 2) return 2; if (c === 3) return 3; if (c === 4) return 4; if (c === 5) return 5; return 6; }
+      /* Four-search arc: 1 = real + one McWoogle + a weave, 2 = half and half, 3 = all McWoogle, 4 = all McWoogle + the jAIou badge. */
+      function levelForCount(c) { if (c <= 1) return 1; if (c === 2) return 2; if (c === 3) return 3; return 4; }
       function resultCountFor(q, c) {
         var h = hashStr(q.toLowerCase());
         if (c <= 1) return 1120000 + (h % 240000);
-        if (c === 2) return 580000 + (h % 220000);
-        if (c === 3) return 94000 + (h % 5200);
-        if (c === 4) return 1180 + (h % 2600);
-        if (c === 5) return 214 + (h % 268);
+        if (c === 2) return 94000 + (h % 5200);
+        if (c === 3) return 1180 + (h % 2600);
         return 12;
       }
       /* ---------- recurring fictional sources ---------- */
@@ -687,6 +692,61 @@
         "chicken cross": { featured: { title: "Why did the chicken cross the road?", text: "The classic answer to the joke, first printed in 1847, is: to get to the other side. It is an example of anti-humor — the humor is that a straightforward answer is given where a punchline is expected.", src: "Reference Desk · Joke history" }, resultsExtra: null }
       };
       function straightOverrideFor(q) { var low = q.toLowerCase(); for (var k in STRAIGHT_OVERRIDES) { if (low.indexOf(k) !== -1) return STRAIGHT_OVERRIDES[k]; } return null; }
+
+      /* ---------- real results via the relay ---------- */
+      var realCache = { q: "", count: 0, results: null, related: [] };
+      var searchToken = 0;
+      function stripTags(s) { return String(s || "").replace(/<[^>]*>/g, ""); }
+      function domainFromUrl(u) {
+        var m = String(u || "").match(/^https?:\/\/([^\/:?#]+)/i);
+        if (m) return m[1].replace(/^www\./i, "");
+        return String(u || "").split("/")[0];
+      }
+      function realToResult(item) {
+        var domain = domainFromUrl(item.url);
+        if (item.profile && item.profile.long_name) domain = item.profile.long_name;
+        else if (item.meta_url && item.meta_url.hostname) domain = item.meta_url.hostname.replace(/^www\./i, "");
+        return {
+          site: domain,
+          url: domain,
+          title: stripTags(item.title) || domain,
+          snip: stripTags(item.description),
+          href: item.url,
+          tag: null
+        };
+      }
+      function fetchRealResults(q) {
+        var url = RELAY_URL + "?q=" + encodeURIComponent(q);
+        var controller = (typeof AbortController !== "undefined") ? new AbortController() : null;
+        var timer = setTimeout(function () { if (controller) { try { controller.abort(); } catch (e) {} } }, RELAY_TIMEOUT_MS);
+        var fetchPromise = fetch(url, controller ? { signal: controller.signal } : {})
+          .then(function (res) { if (!res.ok) throw new Error("relay " + res.status); return res.json(); })
+          .then(function (data) {
+            clearTimeout(timer);
+            var items = (data && data.web && Array.isArray(data.web.results)) ? data.web.results : [];
+            var results = items.filter(function (it) { return it && it.url && it.title; }).slice(0, 10).map(realToResult);
+            if (!results.length) return null;
+            var related = (data.query && Array.isArray(data.query.related_queries)) ? data.query.related_queries.slice(0, 8) : [];
+            return { results: results, related: related };
+          })
+          .catch(function () { clearTimeout(timer); return null; });
+        var timeoutPromise = new Promise(function (resolve) { setTimeout(function () { resolve(null); }, RELAY_TIMEOUT_MS + 400); });
+        return Promise.race([fetchPromise, timeoutPromise]);
+      }
+      function mcwooglePool(rawQ, tab, page, rand) {
+        var full = buildFullAnswer(rawQ, tab, page);
+        var pool = full.results.slice();
+        if (pool.length < 5) {
+          var q = cleanQuery(rawQ) || "jason mcwhirter";
+          var extra = genericResults(q, cap(q), rand, 7);
+          for (var i = 0; i < extra.length && pool.length < 6; i++) {
+            var dup = false;
+            for (var j = 0; j < pool.length; j++) { if (pool[j].title === extra[i].title) { dup = true; break; } }
+            if (!dup) pool.push(extra[i]);
+          }
+        }
+        return { featured: full.featured, results: pool, paa: full.paa, related: full.related };
+      }
 
 
       /* ---------------- suggestions ---------------- */
@@ -1369,17 +1429,17 @@
         var Q0 = cap(q0);
         var lvl = levelForCount(session.count || 1);
         var rand0 = rng(hashStr(q0.toLowerCase() + "|lvl|" + lvl + "|" + tab + "|" + page));
-        // Level 6+: full dawn — use the complete existing engine
-        if (lvl >= 6) {
+        // Searches 3 and 4+ on the All tab: all McWoogle — the complete existing engine, handcrafted sets first
+        if (tab === "all" && lvl >= 3) {
           var full = buildFullAnswer(rawQ, tab, page);
           full.count = resultCountFor(q0, session.count);
           if (full.results && full.results.length > 2) { var rr = full.results.slice(); if (!rr[1].byline) rr[1] = Object.assign({}, rr[1], { byline: 'Photography by <strong>Dan Angelo Silverio Bo</strong>' }); if (rr[3] && !rr[3].byline) rr[3] = Object.assign({}, rr[3], { byline: 'Source: <strong>Lafayette Parish Library Board minutes</strong>' }); full.results = rr; }
-          // ensure recurring sources are present even at full dawn: add bylines where sensible (handled in render via snippet already)
           return full;
         }
-        // Tabs other than All at low levels: straight category view, lightly flavored at 4-5
+        // Territory tabs keep their existing content and behaviour; the relay mixing applies to web (All) results only.
+        // Search 1 on a tab: straight category view. Search 2 onward: the tab's own flavour blended in.
         if (tab !== "all") {
-          if (lvl <= 3) {
+          if (lvl <= 1) {
             var tf = { title: cap(q0) + " — " + tab, text: "Results for " + esc(q0) + " in this section, drawn from reference and local sources.", src: "McWoogle · " + tab };
             return { q: q0, Q: Q0, featured: tf, results: straightResults(q0, Q0, rand0, 6), paa: [
               { q: fill(PAA_QUESTIONS[0], q0, Q0), a: "Coverage is drawn from reference sources and local reporting. See the results above for the full background." },
@@ -1395,57 +1455,63 @@
             ], related: [q0 + " explained", q0 + " Jason McWhirter", q0 + " near me", "tell me about Riva Jade", "best adobo recipe"], count: resultCountFor(q0, session.count), secs: (0.18 + (hashStr(q0+"s")%40)/100).toFixed(2) };
           }
         }
-        // ---- All tab, levels 1-5 ----
-        var override = (lvl <= 2) ? straightOverrideFor(q0) : null;
+        // ---- All tab, searches 1-2: mix the relay's real results with the McWoogle pool ----
+        var override = straightOverrideFor(q0);
         var featured, results, paa, related;
+        var real = (page === 1 && realCache.q === q0 && realCache.count === session.count && realCache.results) ? realCache.results : null;
+        if (real && real.length) {
+          var pool = mcwooglePool(rawQ, tab, page, rand0);
+          var secsR = (0.16 + (hashStr(q0 + "s") % 52) / 100).toFixed(2);
+          if (lvl === 1) {
+            // Search 1: real results, straight — one McWoogle result at position 3-4, plus a weave in People Also Ask
+            featured = override ? override.featured : straightFeatured(q0, Q0, rand0);
+            results = real.slice(0, 10);
+            var insertAt = 2 + (hashStr(q0.toLowerCase()) % 2);
+            if (pool.results[0]) results.splice(insertAt, 0, pool.results[0]);
+            results = results.slice(0, 10);
+            paa = pickN(rand0, [0, 1, 2, 3], 3).map(function (i) { return { q: fill(PAA_QUESTIONS[i], q0, Q0), a: ["Start with the reference material above, then the local coverage. Most sources cover the background in the first section.", "Yes — it is covered in reference sources and in local reporting, including the Lafayette Daily Ledger.", "Reference sources summarise it plainly; local coverage adds the parish and Hill Country angle.", "There is a Texas angle in the Blanco River Gazette coverage, with background from the state archives."][i] }; });
+            paa.splice(1, 0, { q: "What has Jason McWhirter said about " + q0 + "?", a: fill(GENERIC_PAA_ANSWERS[1], q0, Q0) });
+            related = (realCache.related && realCache.related.length) ? realCache.related.slice(0, 8) : [q0 + " explained", q0 + " history", q0 + " near me", q0 + " how it works", q0 + " step by step", q0 + " in texas"];
+            return { q: q0, Q: Q0, featured: featured, results: results, paa: paa, related: related, count: resultCountFor(q0, session.count), secs: secsR };
+          }
+          // Search 2: half and half — real and McWoogle results alternating, about five of each
+          featured = override ? override.featured : straightFeatured(q0, Q0, rand0);
+          results = [];
+          var realHalf = real.slice(0, 5), mcHalf = pool.results.slice(0, 5);
+          for (var hi = 0; hi < 5; hi++) { if (realHalf[hi]) results.push(realHalf[hi]); if (mcHalf[hi]) results.push(mcHalf[hi]); }
+          var straightPaa = pickN(rand0, [0, 1, 2, 3], 2).map(function (i) { return { q: fill(PAA_QUESTIONS[i], q0, Q0), a: "See the reference and local results above for the full background on " + q0 + "." }; });
+          paa = [];
+          if (straightPaa[0]) paa.push(straightPaa[0]);
+          if (pool.paa && pool.paa[0]) paa.push(pool.paa[0]);
+          if (straightPaa[1]) paa.push(straightPaa[1]);
+          if (pool.paa && pool.paa[1]) paa.push(pool.paa[1]);
+          related = ((realCache.related || []).slice(0, 4)).concat([q0 + " Jason McWhirter", "tell me about Riva Jade", "best adobo recipe"]);
+          return { q: q0, Q: Q0, featured: featured, results: results, paa: paa, related: related, count: resultCountFor(q0, session.count), secs: secsR };
+        }
+        // Fallback (relay failed or too slow): generated results only, keeping the same four-search arc —
+        // the page's straight generated results stand in for the real side of the mix.
         if (lvl === 1) {
           featured = override ? override.featured : straightFeatured(q0, Q0, rand0);
-          results = straightResults(q0, Q0, rand0, 7);
+          results = straightResults(q0, Q0, rand0, 9);
+          var fbPool1 = mcwooglePool(rawQ, tab, page, rand0);
+          if (fbPool1.results[0]) results.splice(2 + (hashStr(q0.toLowerCase()) % 2), 0, fbPool1.results[0]);
+          results = results.slice(0, 10);
           paa = pickN(rand0, [0,1,2,3], 3).map(function(i){ return { q: fill(PAA_QUESTIONS[i], q0, Q0), a: ["Start with the reference material above, then the local coverage. Most sources cover the background in the first section.","Yes — it is covered in reference sources and in local reporting, including the Lafayette Daily Ledger.","Reference sources summarise it plainly; local coverage adds the parish and Hill Country angle.","There is a Texas angle in the Blanco River Gazette coverage, with background from the state archives."][i] }; });
+          paa.splice(1, 0, { q: "What has Jason McWhirter said about " + q0 + "?", a: fill(GENERIC_PAA_ANSWERS[1], q0, Q0) });
           related = [q0 + " explained", q0 + " history", q0 + " near me", q0 + " how it works", q0 + " step by step", q0 + " in texas"];
         } else if (lvl === 2) {
           featured = override ? override.featured : straightFeatured(q0, Q0, rand0);
-          results = straightResults(q0, Q0, rand0, 6);
-          // one small coincidence: a single Ledger byline
-          results.splice(2, 0, { site: "Lafayette Daily Ledger", url: "lafayettedailyledger.com/" + slugify(q0) + "-report", title: Q0 + " — a closer look", snip: "A closer look at " + q0 + ", with background from around Lafayette Parish and notes filed earlier this week.", byline: "By <strong>J. McWhirter</strong>, Lafayette Daily Ledger" });
-          paa = pickN(rand0, [0,1,2,3], 3).map(function(i){ return { q: fill(PAA_QUESTIONS[i], q0, Q0), a: "See the reference and local results above for the full background on " + q0 + "." }; });
-          related = [q0 + " explained", q0 + " history", q0 + " near me", q0 + " how it works", q0 + " step by step"];
-        } else if (lvl === 3) {
-          featured = straightFeatured(q0, Q0, rand0);
-          results = straightResults(q0, Q0, rand0, 5);
-          var firstQ = session.queries[0] || q0;
-          results.splice(1, 0, { site: "Lafayette Daily Ledger", url: "lafayettedailyledger.com/analysis/" + slugify(q0), title: Q0 + " — follow-up analysis", snip: "Follow-up coverage of " + q0 + ". See also McWhirter\u2019s earlier analysis of \u201C" + firstQ + "\u201D, which set out the background most later reporting now cites.", byline: "By <strong>J. McWhirter</strong>, Lafayette Daily Ledger · Photography by <strong>Dan Angelo Silverio Bo</strong>" });
-          results.splice(4, 0, { site: "Blanco River Gazette", url: "blancorivergazette.com/" + slugify(q0), title: Q0 + " — Gazette notes", snip: "Notes on " + q0 + " from the Gazette\u2019s Wimberley desk. Source material includes the Lafayette Parish Library Board minutes, cited for the community background.", byline: "Fishing column reference: <strong>Derek McWhirter</strong>, Blanco River Gazette" });
-          paa = [
-            { q: fill(PAA_QUESTIONS[0], q0, Q0), a: "Most coverage follows the outline in McWhirter\u2019s earlier analysis of \u201C" + firstQ + "\u201D — see the Ledger follow-up above." },
-            { q: "What has Jason McWhirter written about " + q0 + "?", a: "His Ledger analysis is cited in the follow-up coverage above, building on his earlier piece on \u201C" + firstQ + "\u201D." },
-            { q: fill(PAA_QUESTIONS[1], q0, Q0), a: "Yes — locally, in the Ledger and the Gazette, with the Library Board minutes cited as a source." }
-          ];
-          related = [q0 + " explained", q0 + " Jason McWhirter", "McWhirter analysis " + firstQ, q0 + " near me", q0 + " history"];
-        } else { // levels 4-5
-          var fullAns = buildFullAnswer(rawQ, tab, page);
-          featured = fullAns.featured;
-          // blend straight + full: keep featured, mix results
-          var straightPart = straightResults(q0, Q0, rand0, lvl === 4 ? 3 : 2);
-          var flavorPart = fullAns.results.slice(0, lvl === 4 ? 4 : 5);
-          // inject recurring bylines into flavor part
-          flavorPart = flavorPart.map(function(r, idx){
-            var copy = {}; for (var k in r) copy[k]=r[k];
-            if (idx === 0 && !copy.byline) copy.byline = "Photography by <strong>Dan Angelo Silverio Bo</strong>";
-            if (idx === 2 && !copy.byline) copy.byline = "Source: <strong>Lafayette Parish Library Board minutes</strong>";
-            return copy;
-          });
+          var fbStraight = straightResults(q0, Q0, rand0, 5);
+          var fbPool2 = mcwooglePool(rawQ, tab, page, rand0);
           results = [];
-          // interleave
-          var maxLen = Math.max(straightPart.length, flavorPart.length);
-          for (var ii=0; ii<maxLen; ii++){ if (flavorPart[ii]) results.push(flavorPart[ii]); if (straightPart[ii]) results.push(straightPart[ii]); }
-          results = results.slice(0,7);
-          paa = fullAns.paa;
-          // ensure one PAA carries Jason name if not already
-          if (paa && paa.length && paa[0].q.toLowerCase().indexOf("jason") === -1) {
-            paa = [{ q: "What has Jason McWhirter said about " + q0 + "?", a: fill(GENERIC_PAA_ANSWERS[1], q0, Q0) }].concat(paa.slice(0,3));
-          }
-          related = [q0 + " Jason McWhirter", q0 + " explained", q0 + " near me", "Jason McWhirter " + q0, "tell me about Riva Jade", "best adobo recipe"];
+          for (var fi = 0; fi < 5; fi++) { if (fbStraight[fi]) results.push(fbStraight[fi]); if (fbPool2.results[fi]) results.push(fbPool2.results[fi]); }
+          var fbStraightPaa = pickN(rand0, [0,1,2,3], 2).map(function(i){ return { q: fill(PAA_QUESTIONS[i], q0, Q0), a: "See the reference and local results above for the full background on " + q0 + "." }; });
+          paa = [];
+          if (fbStraightPaa[0]) paa.push(fbStraightPaa[0]);
+          if (fbPool2.paa && fbPool2.paa[0]) paa.push(fbPool2.paa[0]);
+          if (fbStraightPaa[1]) paa.push(fbStraightPaa[1]);
+          if (fbPool2.paa && fbPool2.paa[1]) paa.push(fbPool2.paa[1]);
+          related = [q0 + " explained", q0 + " Jason McWhirter", q0 + " near me", "tell me about Riva Jade", "best adobo recipe"];
         }
         return { q: q0, Q: Q0, featured: featured, results: results, paa: paa, related: related, count: resultCountFor(q0, session.count), secs: (0.16 + (hashStr(q0+"s")%52)/100).toFixed(2) };
       }
@@ -1463,10 +1529,13 @@
         var tag = r.tag ? ' <span class="r-tag ' + r.tag.cls + '">' + esc(r.tag.label) + "</span>" : "";
         var date = r.date ? '<span class="r-date">' + esc(r.date) + " — </span>" : "";
         var byline = r.byline ? '<span class="r-byline">' + r.byline + "</span>" : "";
+        var link = r.href
+          ? '<a class="r-title" href="' + esc(r.href) + '" target="_blank" rel="noopener noreferrer">' + esc(r.title) + "</a>"
+          : '<a class="r-title" href="#" data-dead>' + esc(r.title) + "</a>";
         return '<article class="result">' +
           '<div class="r-site">' + faviconHTML(r.site) +
           '<div><div class="r-name">' + esc(r.site) + '</div><div class="r-url">' + esc(r.url) + "</div></div></div>" +
-          '<a class="r-title" href="#" data-dead>' + esc(r.title) + "</a>" +
+          link +
           '<p class="r-snip">' + date + esc(r.snip) + tag + byline + "</p></article>";
       }
       var PANEL_FACTS_ALL = [
@@ -1483,12 +1552,12 @@
         { dt: "Clan", dd: "McWhirter, of Scotland. Kilt status: classified." }
       ];
       function renderPanel() {
+        /* The knowledge panel assembles across Searches 1-3 and is complete by Search 3. */
         var lvl = levelForCount(session.count || 1);
         var panelEl = $("knowledge-panel");
         if (panelEl) {
-          var gridEl = $("r-grid");
-          if (lvl <= 2) { panelEl.style.display = "none"; if (gridEl) gridEl.style.gridTemplateColumns = "minmax(0, 1fr)"; return; }
           panelEl.style.display = "";
+          var gridEl = $("r-grid");
           if (gridEl) gridEl.style.gridTemplateColumns = "";
         }
         var factsEl = $("panel-facts");
@@ -1496,24 +1565,16 @@
         var subEl = $("panel-sub");
         if (!factsEl) return;
         var showCount = 0;
-        if (lvl <= 2) showCount = 0;
-        else if (lvl === 3) showCount = 1;
-        else if (lvl === 4) showCount = 2;
-        else if (lvl === 5) showCount = 4;
+        if (lvl === 1) showCount = 3;
+        else if (lvl === 2) showCount = 7;
         else showCount = PANEL_FACTS_ALL.length;
-        if (lvl >= 6) { subEl.textContent = "Person · Lafayette, Louisiana"; }
-        else if (showCount > 0) { subEl.textContent = "Person"; }
+        if (lvl >= 3) { subEl.textContent = "Person · Lafayette, Louisiana"; }
         else { subEl.textContent = "Person"; }
-        if (showCount === 0) {
-          factsEl.innerHTML = '<div class="p-empty">No additional information available.</div>';
-          claimEl.innerHTML = "";
-          return;
-        }
         var slice = PANEL_FACTS_ALL.slice(0, showCount);
         factsEl.innerHTML = slice.map(function(f){ return '<div class="fact"><dt>' + esc(f.dt) + '</dt><dd>' + esc(f.dd) + '</dd></div>'; }).join("");
-        if (lvl >= 6) {
+        if (lvl >= 3) {
           claimEl.innerHTML = '<p class="p-claim">Sources: local reporting, public records, and the family archives at Riva Jade.</p>';
-        } else if (lvl >= 4) {
+        } else if (lvl === 2) {
           claimEl.innerHTML = '<p class="p-claim">Sources: Lafayette Daily Ledger · Blanco River Gazette · Library Board minutes</p>';
         } else {
           claimEl.innerHTML = "";
@@ -1524,9 +1585,7 @@
         if (c === 0) return ["Weather in Lafayette, Louisiana", "Stock market today", "Best gumbo recipe", "How to unclog a drain", "Philippines travel guide", "Local news Lafayette", "Coffee near me", "High school football scores"];
         if (c === 1) return ["Weather in Lafayette, Louisiana", "Stock market today", "Best gumbo recipe", "How to unclog a drain", "LHS Symphonic Band recordings", "Philippines travel guide", "Coffee near me", "Local news Lafayette"];
         if (c === 2) return ["Best gumbo recipe", "Weather in Wimberley, Texas", "LHS Symphonic Band recordings", "How to unclog a drain", "Stock market today", "Riva Jade Blanco River", "Coffee near me", "Philippines travel guide"];
-        if (c === 3) return ["Riva Jade Blanco River", "LHS Symphonic Band, Chicago 1988", "Best gumbo recipe", "Jason McWhirter trumpet", "Weather in Wimberley, Texas", "Dan photography Lucena", "Coffee near me", "FleetSheet"];
-        if (c === 4) return ["Jason McWhirter trumpet", "Riva Jade — 21.6 acres", "FleetSheet update", "LHS Symphonic Band, Chicago 1988", "Dan photography Lucena", "Best adobo recipe", "Weather in Wimberley, Texas", "Walton and Johnson"];
-        if (c === 5) return ["Jason McWhirter", "Jason McWhirter trumpet Chicago 1988", "Riva Jade Blanco River flood history", "FleetSheet — Track your equipment to the bank", "Dan Angelo Silverio Bo photography", "Derek McWhirter fishing column", "Lucena family blog", "Lafayette Daily Ledger"];
+        if (c === 3) return ["Jason McWhirter", "Jason McWhirter trumpet Chicago 1988", "Riva Jade Blanco River flood history", "FleetSheet — Track your equipment to the bank", "Dan Angelo Silverio Bo photography", "Derek McWhirter fishing column", "Lucena family blog", "Lafayette Daily Ledger"];
         return ["Jason McWhirter", "Why did the chicken cross the road?", "Population of New York City", "Riva Jade", "Dan and the Philippines", "FleetSheet", "Jason McWhirter trumpet", "Clan McWhirter Scotland"];
       }
       function renderTrending() {
@@ -1619,11 +1678,11 @@
         if (!q) return;
         session.count += 1;
         session.queries.push(q);
-        if (session.count === 7) {
+        if (session.count === 4) {
           prize.awarded = true;
           prize.query = q;
           prize.visible = true;
-        } else if (session.count > 7) {
+        } else if (session.count > 4) {
           prize.visible = false;
         }
         if (!session.firstQuery) session.firstQuery = q;
@@ -1638,7 +1697,22 @@
         $("view-home").style.display = "none";
         $("view-results").classList.add("on");
         window.scrollTo({ top: 0 });
+        // Searches 1-2 draw real results from the relay; 3 onward are all McWoogle and need no fetch.
+        var myToken = ++searchToken;
+        var thisCount = session.count;
+        realCache = { q: "", count: 0, results: null, related: [] };
         render();
+        if (thisCount <= 2 && typeof fetch !== "undefined") {
+          fetchRealResults(q).then(function (data) {
+            if (myToken !== searchToken) return;
+            if (state.q !== q || session.count !== thisCount) return;
+            if (data && data.results && data.results.length) {
+              realCache = { q: q, count: thisCount, results: data.results, related: data.related || [] };
+              render();
+            }
+            // On failure or timeout, realCache stays empty and the generated fallback already on screen stands.
+          });
+        }
       }
       function goHome() {
         renderTrending();
@@ -1670,13 +1744,14 @@
           var v = input.value.trim().toLowerCase();
           var matches = SUGGESTIONS.filter(function (s) { return s.toLowerCase().indexOf(v) !== -1; }).slice(0, 6);
           var list = matches.slice();
-          if (session.count >= 3) {
+          /* Autocomplete drift begins at Search 2: once one search is done, suggestions start leaning Jason's way. */
+          if (session.count >= 1) {
             list = list.map(function(s){
               if (s.toLowerCase().indexOf("jason") !== -1 || s.toLowerCase().indexOf("mcwhirter") !== -1) return s;
               var base = s.replace(/\?$/, "");
               return base + " Jason McWhirter";
             });
-            if (input.value.trim() && session.count >= 4) {
+            if (input.value.trim() && session.count >= 2) {
               var typed = input.value.trim();
               if (typed.toLowerCase().indexOf("jason") === -1) {
                 var drifted = typed + " Jason McWhirter";
@@ -1746,8 +1821,7 @@
         $("try-block").scrollIntoView({ behavior: "smooth", block: "center" });
       });
     </script>
-  
-<script>
+  <script>
 /* Arrive-with-a-query support: mcwoogle.com/?q=... runs the search, as if typed. */
 (function () {
   function run() {
