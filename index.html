@@ -368,6 +368,12 @@
       .prize-btn.secondary { background: var(--surface); color: var(--ink); border-color: var(--line-strong); box-shadow: none; }
       .prize-btn.secondary:hover { background: var(--bg-soft); border-color: var(--ink-faint); }
       .prize-guestbook { font-size: 16.5px; font-weight: 600; padding: 10px 4px; }
+      .prize-claim-code {
+        margin: 0 auto 18px; max-width: 36em; background: var(--bg-soft);
+        border: 1px solid var(--line); border-radius: 10px; padding: 13px 16px;
+        font-size: 16.5px; line-height: 1.55; color: var(--ink-soft); overflow-wrap: break-word;
+      }
+      .prize-claim-code strong { color: var(--ink); font-weight: 800; letter-spacing: .01em; }
       .prize-status { margin: 12px 0 0; font-size: 15px; color: var(--green); min-height: 1.4em; }
       .prize-hide {
         display: block; margin: -10px -6px 2px auto; background: none; border: none;
@@ -557,7 +563,24 @@
       /* ---------- session memory (in-memory only, this tab) ---------- */
       var session = { count: 0, queries: [] };
       /* ---------- The jAIou badge (awarded on the 4th search of a session) ---------- */
-      var prize = { awarded: false, query: "", visible: false };
+      var prize = { awarded: false, query: "", visible: false, code: "", codeRequested: false };
+      var BADGE_ISSUE_URL = "https://jaiou-guestbook.jrmcw.workers.dev/badge/issue";
+      function requestBadgeCode() {
+        if (prize.codeRequested) return;
+        prize.codeRequested = true;
+        if (typeof fetch === "undefined") return;
+        try {
+          fetch(BADGE_ISSUE_URL)
+            .then(function (res) { if (!res.ok) throw new Error("badge " + res.status); return res.json(); })
+            .then(function (data) {
+              var code = (data && typeof data.code === "string") ? data.code.trim() : "";
+              if (!code) return;
+              prize.code = code;
+              if (prize.visible) render();
+            })
+            .catch(function () { /* No code line and no error — the panel stands as it was. */ });
+        } catch (e) { /* No code line and no error — the panel stands as it was. */ }
+      }
       function badgeSVGString() {
         return '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 320 320" width="640" height="640" role="img" aria-label="The jAIou badge">' +
           '<defs>' +
@@ -603,6 +626,9 @@
         return "I won the jAIou badge on McWoogle — four searches deep. Awarded for: \u201C" + prize.query + ".\u201D Badge displayed here as proof.";
       }
       function prizePanelHTML() {
+        var claimHTML = prize.code
+          ? '<p class="prize-claim-code">Your badge claim code: <strong>' + esc(prize.code) + '</strong> \u2014 take it to the guestbook at jaiou.com/guestbook.html and put it in the claim-code field when you post your announcement, and the badge will stamp your post.</p>'
+          : '';
         return '<section class="prize-panel" id="prize-panel" aria-label="The jAIou badge">' +
           '<div class="tartan-thin" aria-hidden="true"></div>' +
           '<div class="prize-inner">' +
@@ -612,6 +638,7 @@
           '<p class="prize-congrats">Congratulations. Your fourth search has been entered in the record and selected as a winning entry.</p>' +
           '<p class="prize-awarded">Awarded for: <strong>&lsquo;' + esc(prize.query) + '&rsquo;</strong></p>' +
           '<div class="prize-badge">' + badgeSVGString() + '</div>' +
+          claimHTML +
           '<div class="prize-actions">' +
           '<button class="prize-btn" id="prize-download" type="button">Download badge</button>' +
           '<button class="prize-btn secondary" id="prize-copy" type="button">Copy winner&rsquo;s announcement</button>' +
@@ -1605,6 +1632,7 @@
         dym.hidden = true; dym.innerHTML = "";
 
         var html = "";
+        if (prize.visible && prize.awarded) requestBadgeCode();
         if (prize.visible) html += prizePanelHTML();
         html += '<section class="featured"><div class="f-kicker">Overview</div>' +
           "<h2>" + esc(ans.featured.title) + "</h2><p>" + ans.featured.text + '</p>' +
